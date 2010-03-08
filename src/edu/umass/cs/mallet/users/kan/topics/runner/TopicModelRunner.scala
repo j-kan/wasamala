@@ -7,7 +7,7 @@ import cc.mallet.pipe.iterator.FileIterator
 import cc.mallet.pipe._
 
 import edu.umass.cs.mallet.users.kan.scalautil.FileUtil
-
+import edu.umass.cs.mallet.users.kan.topics._
 
 object TopicModelRunner {
 
@@ -38,7 +38,7 @@ object TopicModelRunner {
     
     instances.addThruPipe(
       new FileIterator(directories, FileIterator.STARTING_DIRECTORIES, removeCommonPrefix))
-
+    
     FileUtil.serializeObject(instances, "instances.ser")
 
     instances

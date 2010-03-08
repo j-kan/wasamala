@@ -1,10 +1,10 @@
 package edu.umass.cs.mallet.users.kan.topics.tui
 
-import java.io.{File,Writer,FileWriter,PrintWriter,BufferedWriter, BufferedOutputStream, ObjectOutputStream, FileOutputStream}
+import java.io.{File,Writer,FileWriter,PrintWriter,BufferedWriter, PrintStream, BufferedOutputStream, ObjectOutputStream, FileOutputStream}
 
 import cc.mallet.types.{FeatureSequence, FeatureVector, InstanceList}
 import cc.mallet.topics.tui.DMRLoader
-import cc.mallet.topics.DMRTopicModel
+import cc.mallet.topics.{DMRTopicModel, LDAHyper}
 import cc.mallet.pipe.iterator.FileIterator
 import cc.mallet.pipe._
 
@@ -73,7 +73,12 @@ object DMRLabeledLoader {
 
     dmr.printState(new File("dmr-state.gz"))
     dmr.printDocumentTopics(new File("dmr-doc-topics.txt"))
-    dmr.printTopWords(new File("dmr-topic-keys.txt"), 20, false)
+    
+    val ps = new PrintStream(new BufferedOutputStream(new FileOutputStream("dmr-topic-keys.txt")))
+    
+    dmr.printTopWords(ps, 20, false)
+    
+    ps.close
 
     FileUtil.serializeObject(dmr, "dmr-model.ser")
     

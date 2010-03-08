@@ -1,7 +1,7 @@
 package edu.umass.cs.mallet.users.kan.scalautil
 
 import java.io.{File,Writer,FileWriter,PrintWriter}
-import cc.mallet.types.{FeatureSequence, FeatureVector}
+import cc.mallet.types.{FeatureSequence, FeatureVector, Alphabet}
 import edu.umass.cs.mallet.users.kan.instanceprovider.PreparsedTextWithMetadataLoader.Reader
 import scala.collection.jcl.Conversions._
 
