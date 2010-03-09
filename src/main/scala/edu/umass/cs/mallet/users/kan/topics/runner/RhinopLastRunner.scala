@@ -25,10 +25,6 @@ object RhinopLastRunner extends MalletRunner {
 
   def loadFromMongo(f: File) = {
     
-    val collection = new Mongo().getDB("rhinoplast").getCollection("artists_info")
-    val query  = ""
-    val fields = "{'name' : 1, 'bio.content' : 2}"
-
     val instancePipe = new SerialPipes( Array[Pipe]( 
       //new SaveDataInSource,
       //new TargetStringToFeatures,
@@ -43,8 +39,12 @@ object RhinopLastRunner extends MalletRunner {
       //new PrintInputAndTarget
     ))
         
-    val instances = new InstanceList(instancePipe)
-    val iterator  = new MongoDbCollectionIterator(collection, query, fields) (item => {
+    val iterator  = MongoDbCollectionIterator.fromCollection(
+                      "rhinoplast", 
+                      "artists_info", 
+                      "", 
+                      List("name", "bio.content"),
+                      (item => {
       
       val name    = item.get("name").toString
       val bio     = item.get("bio").asInstanceOf[DBObject]
@@ -55,7 +55,9 @@ object RhinopLastRunner extends MalletRunner {
       val source = name
 
       new Instance(data, target, name, source)
-    })
+    }))
+    
+    val instances = new InstanceList(instancePipe)
     
     instances.addThruPipe(iterator)
     

@@ -97,7 +97,7 @@
                   <mainClass>edu.umass.cs.mallet.users.kan.topics.runner.RhinopLastRunner</mainClass>
                   <args>
                       <arg>rhinoplastfm.ser</arg>
-                      <arg>10</arg>
+                      <arg>16</arg>
                       <arg>1000</arg>
                   </args>
                   <jvmArgs>

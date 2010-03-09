@@ -15,19 +15,38 @@ import com.mongodb.{DBCollection, DBCursor, DBObject, Mongo, MongoException}
 import com.mongodb.util.JSON
 
 
-class MongoDbCollectionIterator(collection:    DBCollection, 
-                                strjsonquery:  String, 
-                                strjsonfields: String)
-                                (val block: DBObject => Instance)  extends Iterator[Instance] {
+class MongoDbCollectionIterator(collection: DBCollection, 
+                                 jsonquery: String, 
+                                    fields: List[String],
+                                 val block: DBObject => Instance)  extends Iterator[Instance] {
 
-  val jsonquery:  DBObject = JSON.parse(strjsonquery).asInstanceOf[DBObject]
-  val jsonfields: DBObject = JSON.parse(strjsonfields).asInstanceOf[DBObject]
-  
-  val cursor = collection.find(jsonquery, jsonfields)
+  private def makeJsonFieldSpec(fields: List[String]): String =
+        (fields zip List.make(fields.length, 1)).map( _ match {
+           case (str:String, index:Int) => "'" ++ str ++ "' :" ++ index.toString
+        }).mkString("{ ", ", ", "  }")
+        
+  val cursor = collection.find(
+                  JSON.parse(jsonquery).asInstanceOf[DBObject], 
+                  JSON.parse(makeJsonFieldSpec(fields)).asInstanceOf[DBObject])
   
   def hasNext: boolean = cursor.hasNext
   
   def next: Instance = block(cursor.next())
   
   def remove = throw new IllegalStateException ("This Iterator<Instance> does not support remove().")
+}
+
+object MongoDbCollectionIterator {
+  
+  def fromCollection(databaseName: String,
+                   collectionName: String, 
+                            query: String, 
+                           fields: List[String],
+                            block: DBObject => Instance) = 
+                                  new MongoDbCollectionIterator(
+                                          new Mongo().getDB(databaseName).getCollection(collectionName),
+                                          query,
+                                          fields,
+                                          block)
+    
 }
