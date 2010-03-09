@@ -9,7 +9,33 @@ import cc.mallet.pipe._
 import edu.umass.cs.mallet.users.kan.scalautil.FileUtil
 import edu.umass.cs.mallet.users.kan.topics._
 
-object TopicModelRunner {
+
+trait MalletRunner {
+
+  def outputDirectory(path: String): Option[File] = path match {
+        case null => None
+        case p    => {
+          val outputDir = new File(p)
+
+          outputDir.mkdirs
+          Some(outputDir)
+        }
+  }
+  
+  def outputFilePath(outputDir: Option[File], filename: String):String = outputDir match {
+    case None      => filename
+    case Some(dir) => new File(dir, filename).getPath
+  }
+
+  def outputFile(outputDir: Option[File], filename: String): File = outputDir match {
+    case None      => new File(filename)
+    case Some(dir) => new File(dir, filename)
+  }
+  
+}
+
+
+object TopicModelRunner extends MalletRunner {
 
   def load(f: File) = {
     if (f.isDirectory)
@@ -44,30 +70,6 @@ object TopicModelRunner {
     instances
   }
   
-  def outputDirectory(path: String): File = {
-    if (path == null)
-        return null
-        
-    val outputDir = new File(path)
-    
-    outputDir.mkdirs
-    
-    outputDir
-  }
-  
-  def outputFilePath(outputDir: File, filename: String):String = {
-    if (outputDir == null) 
-        filename
-    else
-        new File(outputDir, filename).getPath
-  }
-
-  def outputFile(outputDir: File, filename: String): File = {
-    if (outputDir == null) 
-        new File(filename)
-    else
-        new File(outputDir, filename)
-  }
   
   
     //--input train.ser 
@@ -83,11 +85,12 @@ object TopicModelRunner {
 
   def main(args: Array[String]) {
     
-    val instances     = TopicModelRunner.load(new File(args(0)))
+    val inputfile     = new File(args(0))
+    val instances     = TopicModelRunner.load(inputfile)
     val numTopics     = if (args.size > 1) args(1).toInt else 20
     val numIterations = if (args.size > 2) args(2).toInt else 1000
-    
-    val outputDir     = outputDirectory("ptm-%d-iterations-%d-topics".format(numIterations, numTopics))
+    val basename      = inputfile.getName.split("\\.")(0)
+    val outputDir     = outputDirectory("%s-%d-iterations-%d-topics".format(basename, numIterations, numTopics))
     
     val alpha = 50.0
     val beta  = 0.01
