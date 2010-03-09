@@ -31,8 +31,9 @@ object RhinopLastRunner extends MalletRunner {
 
     val instancePipe = new SerialPipes( Array[Pipe]( 
       //new SaveDataInSource,
-      new TargetStringToFeatures,
+      //new TargetStringToFeatures,
       new Input2CharSequence,
+      new CharSequenceRemoveHTML,
       //new CharSubsequence(CharSubsequence.SKIP_HEADER),
       new CharSequence2TokenSequence,
       new TokenSequenceLowercase,
@@ -44,13 +45,14 @@ object RhinopLastRunner extends MalletRunner {
         
     val instances = new InstanceList(instancePipe)
     val iterator  = new MongoDbCollectionIterator(collection, query, fields) (item => {
-      val source  = item.get("name")
+      
+      val name    = item.get("name").toString
       val bio     = item.get("bio").asInstanceOf[DBObject]
       val summary = bio.get("content")
 
-      val data = if (summary == null) "" else summary
+      val data   = if (summary == null) name else (name + summary).toString
       val target = ""
-      val name = source
+      val source = name
 
       new Instance(data, target, name, source)
     })
