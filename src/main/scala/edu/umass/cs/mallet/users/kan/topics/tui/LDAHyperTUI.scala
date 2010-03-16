@@ -51,7 +51,7 @@ object LDAHyperTUI {
     
     outputDir.mkdirs
 
-    val lda = new LDAHyperExtended(numTopics, ALPHA, BETA, new Randoms(RANDOM_SEED))
+    val lda = new LDAHyperExtended(numTopics, ALPHA, BETA)
     
     lda.setRandomSeed(RANDOM_SEED)
     lda.addInstances(training)

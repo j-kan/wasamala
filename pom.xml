@@ -51,6 +51,11 @@
         <artifactId>mallet</artifactId>
         <version>0.0.1-SNAPSHOT</version>
       </dependency>
+      <dependency>
+          <groupId>org.processing</groupId>
+          <artifactId>processing-core</artifactId>
+          <version>1.1</version>
+      </dependency>
 
     <dependency>
       <groupId>junit</groupId>
@@ -97,7 +102,7 @@
                   <mainClass>edu.umass.cs.mallet.users.kan.topics.runner.RhinopLastRunner</mainClass>
                   <args>
                       <arg>rhinoplastfm.ser</arg>
-                      <arg>16</arg>
+                      <arg>256</arg>
                       <arg>1000</arg>
                   </args>
                   <jvmArgs>
@@ -127,8 +132,13 @@
               <launcher>
                   <id>Mongout</id>
                   <mainClass>edu.umass.cs.mallet.users.kan.pipe.iterator.MongoDbIterator</mainClass>
-                  <!-- args are optional <args><arg>arg1</arg></args> -->
-                  <!-- jvmArgs are optional -->
+                  <jvmArgs>
+                      <jvmArg>-Xmx256m</jvmArg>
+                  </jvmArgs>
+              </launcher>
+              <launcher>
+                  <id>Viz</id>
+                  <mainClass>edu.umass.cs.mallet.users.kan.viz.TopicModelViz</mainClass>
                   <jvmArgs>
                       <jvmArg>-Xmx256m</jvmArg>
                   </jvmArgs>

@@ -2,7 +2,9 @@ package edu.umass.cs.mallet.users.kan.topics.runner
 
 import java.io.{File,Writer,FileWriter,PrintWriter,BufferedWriter, BufferedOutputStream, ObjectOutputStream, FileOutputStream}
 
-import cc.mallet.types.{FeatureSequence, FeatureVector, InstanceList}
+import scala.collection.jcl.MutableIterator.Wrapper
+
+import cc.mallet.types.{FeatureSequence, FeatureVector, InstanceList, Alphabet}
 import cc.mallet.pipe.iterator.FileIterator
 import cc.mallet.pipe._
 
@@ -10,28 +12,47 @@ import edu.umass.cs.mallet.users.kan.scalautil.FileUtil
 import edu.umass.cs.mallet.users.kan.topics._
 
 
+
 trait MalletRunner {
 
-  def outputDirectory(path: String): Option[File] = path match {
+  var outputDir: Option[File] = None
+  
+  def setOutputDirectory(path: String): Unit = {
+    outputDir = path match {
         case null => None
         case p    => {
-          val outputDir = new File(p)
+          val dir = new File(p)
 
-          outputDir.mkdirs
-          Some(outputDir)
+          dir.mkdirs
+          Some(dir)
         }
+    }
   }
   
-  def outputFilePath(outputDir: Option[File], filename: String):String = outputDir match {
-    case None      => filename
-    case Some(dir) => new File(dir, filename).getPath
+  def outputFilePath(dir: Option[File], filename: String):String = dir match {
+    case None    => filename
+    case Some(d) => new File(d, filename).getPath
   }
 
-  def outputFile(outputDir: Option[File], filename: String): File = outputDir match {
-    case None      => new File(filename)
-    case Some(dir) => new File(dir, filename)
+  def outputFile(dir: Option[File], filename: String): File = dir match {
+    case None    => new File(filename)
+    case Some(d) => new File(d, filename)
   }
   
+  implicit def string2File(filename:String):File = {
+    println(List(outputDir, filename).mkString(":"))
+    outputFile(outputDir, filename)
+  }
+  
+  
+  implicit def javaIteratorToScalaIterator[A](it : java.util.Iterator[A]) = new Wrapper[A](it)
+  
+  class AlphabetIterable(val alphabet:Alphabet) extends Iterable[Object] {
+    def elements: Iterator[Object] = new Wrapper[Object](alphabet.iterator.asInstanceOf[java.util.Iterator[Object]])
+  }
+  
+  
+  implicit def alphabetToIterable(a:Alphabet):AlphabetIterable = new AlphabetIterable(a)
 }
 
 
@@ -90,7 +111,8 @@ object TopicModelRunner extends MalletRunner {
     val numTopics     = if (args.size > 1) args(1).toInt else 20
     val numIterations = if (args.size > 2) args(2).toInt else 1000
     val basename      = inputfile.getName.split("\\.")(0)
-    val outputDir     = outputDirectory("%s-%d-iterations-%d-topics".format(basename, numIterations, numTopics))
+    
+    setOutputDirectory("%s-%d-iterations-%d-topics".format(basename, numIterations, numTopics))
     
     val alpha = 50.0
     val beta  = 0.01
@@ -98,7 +120,7 @@ object TopicModelRunner extends MalletRunner {
     val ptm = new ParallelTopicModel(numTopics, alpha, beta)
     
     ptm.setRandomSeed(90210)
-    ptm.setProgressLogFile(new File(outputFilePath(outputDir, "progress.txt")))
+    ptm.setProgressLogFile("progress.txt")
     
     ptm.addInstances(instances)
     ptm.setTopicDisplay(50, 20)
@@ -110,12 +132,12 @@ object TopicModelRunner extends MalletRunner {
  
     ptm.estimate
 
-    ptm.printState(outputFile(outputDir, "state.gz"))
-    ptm.printDocumentTopics(outputFile(outputDir, "doc-topics.txt"))
-    ptm.printTypeTopicCounts(outputFile(outputDir, "word-topic-counts.txt"))
-    ptm.printTopWords(outputFile(outputDir, "topic-keys.txt"), 20, false)
+    ptm.printState("state.gz")
+    ptm.printDocumentTopics("doc-topics.txt")
+    ptm.printTypeTopicCounts("word-topic-counts.txt")
+    ptm.printTopWords("topic-keys.txt", 20, false)
 
-    FileUtil.serializeObject(ptm, outputFile(outputDir, "ptm-model.ser"))
+    FileUtil.serializeObject(ptm, "ptm-model.ser")
     
     //ptm.setModelOutput(outputModelInterval.value, outputModelFilename.value);
     //                lda.setSaveState(outputStateInterval.value, stateFile.value);
