@@ -13,7 +13,7 @@ import edu.umass.cs.mallet.users.kan.topics._
 
 
 
-trait MalletRunner {
+trait MalletRunner extends MalletExtensions {
 
   var outputDir: Option[File] = None
   
@@ -43,16 +43,6 @@ trait MalletRunner {
     println(List(outputDir, filename).mkString(":"))
     outputFile(outputDir, filename)
   }
-  
-  
-  implicit def javaIteratorToScalaIterator[A](it : java.util.Iterator[A]) = new Wrapper[A](it)
-  
-  class AlphabetIterable(val alphabet:Alphabet) extends Iterable[Object] {
-    def elements: Iterator[Object] = new Wrapper[Object](alphabet.iterator.asInstanceOf[java.util.Iterator[Object]])
-  }
-  
-  
-  implicit def alphabetToIterable(a:Alphabet):AlphabetIterable = new AlphabetIterable(a)
 }
 
 

@@ -21,13 +21,15 @@ object TopicModelViz extends P5 with MalletRunner {
 
   val basename = "rhinoplastfm"
   val numIterations = 1000
-  val numTopics = 32
+  val numTopics = 16
   val alpha    = 50.0/numTopics
   val beta     = 0.01
   
   setOutputDirectory("%s-%d-iterations-%d-topics-%f-alpha-%f-beta".format(basename, numIterations, numTopics, alpha, beta))
   
   val lda = LDAHyperExtended.read("lda-model.ser")
+  val numDocs = lda.numDocs
+  val topicAssignments = lda.topicAssignments
 
   val fontLg: PFont = loadFont("GillSans-Bold-20.vlw") 
   val ylineheight = 18
@@ -35,7 +37,7 @@ object TopicModelViz extends P5 with MalletRunner {
   
   val namewidth = 300
   
-  var pagesize = 0
+  var linesperpage = 0
   var startindex = 0
   var drawn = false
   
@@ -70,12 +72,12 @@ object TopicModelViz extends P5 with MalletRunner {
   override def keyPressed() = {
     if (keyCode == PConstants.DOWN) {
       drawn = false
-      startindex = startindex + pagesize
+      startindex = (startindex + linesperpage) min (numDocs - (numDocs % linesperpage))
       println(startindex)
     }
     else if (keyCode == PConstants.UP) {
       drawn = false
-      startindex = (startindex - pagesize) max 0
+      startindex = (startindex - linesperpage) max 0
       println(startindex)
     }
   }
@@ -104,11 +106,11 @@ object TopicModelViz extends P5 with MalletRunner {
    
     // drawAlphabet
     
-   val hue = random(100)
-   val sat = random(50)
-   val bri = random(40)
+   // val hue = random(100)
+   // val sat = random(50)
+   // val bri = random(40)
    
-   println(List(hue, sat, bri).map(_.toString).mkString(":"))
+   //println(List(hue, sat, bri).map(_.toString).mkString(":"))
    
    // fill(hue, sat, bri, 30)
    // noStroke
@@ -125,45 +127,47 @@ object TopicModelViz extends P5 with MalletRunner {
    //   }
    // }
    
-    val topicAssignments = lda.getData
 
     val topicwidth = ((width-namewidth)/numTopics).toInt
    
     withMatrix {
       translate(10, 10)
       
-      pagesize = 0
+      var pagesize = 0
       
-      for ((a, (x,y)) <- topicAssignments.iterator drop startindex zip line_xy(width-10, height-20, width-10, ylineheight)) {
+      for ((a, (x,y)) <- topicAssignments drop startindex zip line_xy(width-10, height-20, width-10, ylineheight)) {
         
         pagesize += 1
         
-        val name = a.instance.getName.toString
-        val tf   = a.instance.getData.asInstanceOf[FeatureSequence]
-        val content  = tf.getFeatures.map( index => tf.getAlphabet.lookupObject(index).toString ).deepMkString(" ")
-        val features = a.topicSequence.getFeatures
+        val hue = startindex*100/numDocs
         
-        var counts = Array.make[Float](numTopics, 0F)
-        for (f <- features)
-          counts(f) += 1
+        // val name = a.instance.getName.toString
+        // val tf   = a.instance.getData.asInstanceOf[FeatureSequence]
+        // val content  = tf.getFeatures.map( index => tf.getAlphabet.lookupObject(index).toString ).deepMkString(" ")
+        // val features = a.topicSequence.getFeatures
+        // 
+        // var counts = Array.make[Float](numTopics, 0F)
+        // for (f <- features)
+        //   counts(f) += 1
 
-        fill(hue, sat, 75, 80)
-        text(name, x, y, width-10, ylineheight)
-        fill(hue, sat, 75, 20)
-        text(content, x+namewidth, y, width-namewidth, ylineheight)
+        fill(hue, 50, 75, 80)
+        text(a.name, x, y, width-10, ylineheight)
+        fill(hue, 20, 75, 20)
+        text(a.content, x+namewidth, y, width-namewidth, ylineheight)
        
-        //println((x,y) + name + ' ' + counts.toString)
+        // println((x,y) + " " + a.name + " " + a.p_topics.deepMkString(" "))
 
         withMatrix {
           translate(x+namewidth, -2)
-          for ((p, i) <- counts.map(_ / features.length) zipWithIndex) {
+          for ((p, i) <- a.p_topics zipWithIndex) {
             stroke(i*100/numTopics, 75, 75, 20)
             fill(i*100/numTopics, 75, 75, 80)
-            rect(i*topicwidth, y, p*topicwidth, ylineheight-1)
+            rect(i*topicwidth, y, p.toFloat*topicwidth, ylineheight-1)
           }
         }
       }
       drawn = true
+      if (linesperpage == 0) { linesperpage = pagesize }
     }
   }
 
